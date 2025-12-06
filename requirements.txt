@@ -1,0 +1,8 @@
+streamlit
+chromadb
+sentence-transformers
+torch
+numpy
+scikit-learn
+gtts
+pyttsx3
