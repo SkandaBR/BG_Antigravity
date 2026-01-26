@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 # --- Configuration ---
-st.set_page_config(page_title="Bhagavad Gita Ch. 2 AI", layout="wide")
+st.set_page_config(page_title="Bhagavad Gita Knowledge Repository", layout="wide")
 
 # --- Constants ---
 JSON_FILE_PATH = "bhagavadgita_Chapter_2.json"
@@ -157,7 +157,7 @@ def generate_audio_callback(idx, verse_number, lang):
 # --- Main App ---
 
 def main():
-    st.title("Bhagavad Gita Ch. 2 - AI Assistant")
+    st.title("Bhagavad Gita Knowledge Repository")
     
     # Sidebar for Debug
     with st.sidebar:
@@ -213,7 +213,7 @@ def main():
         st.write(f"Collection Count: {collection.count()}")
 
     # Sample Questions
-    st.subheader("Ask a question about Chapter 2 / ಅಧ್ಯಾಯ 2 ರ ಬಗ್ಗೆ ಪ್ರಶ್ನೆ ಕೇಳಿ")
+    st.subheader("Ask a question / ಪ್ರಶ್ನೆ ಕೇಳಿ")
     
     sample_questions = {
         'English': [
@@ -301,8 +301,10 @@ def main():
                     st.json(meta)
                 
                 # Metrics Calculation
+                #Answer relevance 
                 sim_score = cosine_similarity(query_embedding, [doc_embedding])[0][0]
                 relevant_count = sum(1 for emb in embeddings if cosine_similarity(query_embedding, [emb])[0][0] > RELEVANCE_THRESHOLD)
+                #context precision
                 context_precision = relevant_count / len(ids)
                 
                 with st.container():
