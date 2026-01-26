@@ -62,7 +62,7 @@ The file `bhagavadgita_Chapter_2.json` has the following structure:
 
 1. Create a virtual environment (Windows):
 ```bash
-py -m venv .venv
+python -m venv .venv
 ```
 
 2. Activate the virtual environment:
