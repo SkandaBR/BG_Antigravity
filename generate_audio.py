@@ -13,7 +13,7 @@ JSON_FILE_PATH = "bhagavadgita_Chapter_2.json"
 AUDIO_DIR = "audio_files"
 
 def load_data():
-    """Load the Bhagavad Gita JSON data."""
+    """Load the Bhagavad Gita JSON data from the local file."""
     with open(JSON_FILE_PATH, 'r', encoding='utf-8') as f:
         return json.load(f)
 
