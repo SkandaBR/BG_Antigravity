@@ -4,9 +4,9 @@ Run this once to generate all audio files for the original shlokas.
 """
 
 import json
-from gtts import gTTS
-from pathlib import Path
 import time
+from pathlib import Path
+from gtts import gTTS
 
 # Configuration
 JSON_FILE_PATH = "bhagavadgita_Chapter_2.json"
