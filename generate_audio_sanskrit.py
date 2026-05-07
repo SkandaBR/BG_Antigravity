@@ -4,7 +4,6 @@ Run this once to generate all audio files for the original shlokas.
 """
 
 import json
-import os
 from gtts import gTTS
 from pathlib import Path
 import time

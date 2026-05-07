@@ -4,7 +4,6 @@ Run this once to generate all audio files, then the app will use them directly.
 """
 
 import json
-import os
 from gtts import gTTS
 from pathlib import Path
 import time
