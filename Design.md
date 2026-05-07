@@ -70,6 +70,8 @@ python -m venv .venv
 .venv\Scripts\activate
 ```
 
+.venv\Scripts\python generate_audio.py
+
 3. Install dependencies:
 ```bash
 pip install -r requirements.txt

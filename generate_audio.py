@@ -24,10 +24,10 @@ def generate_audio_for_verse(text, output_path, lang='en'):
         print(f"  Generating {lang} audio: {output_path}")
         tts = gTTS(text=text, lang=lang)
         tts.save(output_path)
-        print(f"  ✓ Saved: {output_path}")
+        print(f"  [OK] Saved: {output_path}")
         return True
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [Error] Error: {e}")
         return False
 
 def main():
@@ -62,7 +62,7 @@ def main():
         # Generate English audio
         en_path = audio_path / "en" / f"verse_{verse_num}.mp3"
         if en_path.exists():
-            print(f"  ⊙ English audio already exists, skipping.")
+            print(f"  [SKIP] English audio already exists, skipping.")
         else:
             if generate_audio_for_verse(verse['english_translation'], str(en_path), 'en'):
                 success_count += 1
@@ -73,7 +73,7 @@ def main():
         # Generate Kannada audio
         kn_path = audio_path / "kn" / f"verse_{verse_num}.mp3"
         if kn_path.exists():
-            print(f"  ⊙ Kannada audio already exists, skipping.")
+            print(f"  [SKIP] Kannada audio already exists, skipping.")
         else:
             if generate_audio_for_verse(verse['translation'], str(kn_path), 'kn'):
                 success_count += 1
