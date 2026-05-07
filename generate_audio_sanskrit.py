@@ -62,14 +62,14 @@ def main():
         # Generate Sanskrit audio (text field contains Sanskrit in Kannada script)
         sa_path = audio_path / "sa" / f"verse_{verse_num}.mp3"
         if sa_path.exists():
-            print(f"  [SKIP] Sanskrit audio already exists, skipping.")
+            print("  [SKIP] Sanskrit audio already exists, skipping.")
         else:
             # Try with 'hi' (Hindi) first, fallback to 'kn' (Kannada) if needed
             if generate_audio_for_verse(verse['text'], str(sa_path), 'hi'):
                 success_count += 1
             else:
                 # Fallback to Kannada
-                print(f"  [!] Retrying with Kannada language...")
+                print("  [!] Retrying with Kannada language...")
                 if generate_audio_for_verse(verse['text'], str(sa_path), 'kn'):
                     success_count += 1
                 else:

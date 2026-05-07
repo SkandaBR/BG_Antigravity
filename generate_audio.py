@@ -61,7 +61,7 @@ def main():
         # Generate English audio
         en_path = audio_path / "en" / f"verse_{verse_num}.mp3"
         if en_path.exists():
-            print(f"  [SKIP] English audio already exists, skipping.")
+            print("  [SKIP] English audio already exists, skipping.")
         else:
             if generate_audio_for_verse(verse['english_translation'], str(en_path), 'en'):
                 success_count += 1
@@ -72,7 +72,7 @@ def main():
         # Generate Kannada audio
         kn_path = audio_path / "kn" / f"verse_{verse_num}.mp3"
         if kn_path.exists():
-            print(f"  [SKIP] Kannada audio already exists, skipping.")
+            print("  [SKIP] Kannada audio already exists, skipping.")
         else:
             if generate_audio_for_verse(verse['translation'], str(kn_path), 'kn'):
                 success_count += 1
