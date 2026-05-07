@@ -1,22 +1,103 @@
+import os
+os.environ.setdefault('TRANSFORMERS_VERBOSITY', 'error')  # Suppress transformers advisory noise
+
 import streamlit as st
 import json
 import chromadb
 from chromadb.utils import embedding_functions
 from sentence_transformers import SentenceTransformer
-import os
 from gtts import gTTS
 import tempfile
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import time
+from pathlib import Path
 
 # --- Configuration ---
 st.set_page_config(page_title="Bhagavad Gita Knowledge Repository", layout="wide")
 
 # --- Constants ---
 JSON_FILE_PATH = "bhagavadgita_Chapter_2.json"
-EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
-COLLECTION_NAME = "gita_chapter_2_v3" # Changed to force re-indexing
-RELEVANCE_THRESHOLD = 0.3 
+EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+COLLECTION_NAME = "gita_chapter_2_v4" # Bumped to v4 for multilingual re-indexing
+RELEVANCE_THRESHOLD = 0.3
+AUDIO_DIR = "audio_files"
+
+# --- Audio Auto-Generation ---
+
+@st.cache_resource
+def ensure_audio_files():
+    """
+    Checks if pre-generated audio files exist. If not, generates them
+    automatically so the user never needs to run separate scripts.
+    Runs once per server session via st.cache_resource.
+    """
+    audio_path = Path(AUDIO_DIR)
+    lang_dirs = {"en": "en", "kn": "kn", "sa": "sa"}
+
+    # Check if any MP3 exists across all language subdirs
+    has_audio = any(
+        list((audio_path / lang).glob("*.mp3"))
+        for lang in lang_dirs
+        if (audio_path / lang).exists()
+    )
+
+    if has_audio:
+        return  # All good, nothing to do
+
+    # --- First-time generation ---
+    try:
+        with open(JSON_FILE_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        st.error(f"Cannot generate audio: {JSON_FILE_PATH} not found.")
+        return
+
+    verses = data['chapters'][0]['verses']
+    total = len(verses)
+
+    # Create directories
+    for lang in lang_dirs:
+        (audio_path / lang).mkdir(parents=True, exist_ok=True)
+
+    st.info("🎵 First-time setup: Generating audio files for all verses. This will take a few minutes...")
+    progress_bar = st.progress(0, text="Generating audio files...")
+
+    success, errors = 0, 0
+    total_files = total * 3  # en + kn + sa
+    done = 0
+
+    for idx, verse in enumerate(verses):
+        verse_num = verse['verse']
+
+        tasks = [
+            (verse['english_translation'], audio_path / "en" / f"verse_{verse_num}.mp3", 'en'),
+            (verse['translation'],         audio_path / "kn" / f"verse_{verse_num}.mp3", 'kn'),
+            (verse['text'],                audio_path / "sa" / f"verse_{verse_num}.mp3", 'hi'),  # Hindi proxy for Sanskrit
+        ]
+
+        for text, out_path, lang_code in tasks:
+            if not out_path.exists():
+                try:
+                    gTTS(text=text, lang=lang_code).save(str(out_path))
+                    success += 1
+                    time.sleep(0.5)  # Avoid rate-limiting
+                except Exception as e:
+                    errors += 1
+                    print(f"Audio gen error for {out_path.name}: {e}")
+            done += 1
+            progress_bar.progress(
+                done / total_files,
+                text=f"Generating audio… Verse {idx + 1}/{total} ({done}/{total_files} files)"
+            )
+
+    progress_bar.empty()
+    if errors == 0:
+        st.success(f"✅ Audio generation complete! {success} files created.")
+    else:
+        st.warning(f"Audio generation done with {errors} error(s). {success} files created.")
+    time.sleep(2)
+    st.rerun()
 
 # --- Helper Functions ---
 
@@ -154,6 +235,15 @@ def generate_audio_callback(idx, verse_number, lang):
         st.session_state['debug_logs'].append(f"Exception: {str(e)}")
         print(f"DEBUG: Exception in callback: {e}")
 
+def clear_query_callback():
+    """Resets the query input and clears cached audio bytes.
+    Must be an on_click callback so it runs before the widget is rendered,
+    which is required by Streamlit when writing to a widget-bound key."""
+    st.session_state['query_input'] = ''
+    keys_to_remove = [k for k in st.session_state.keys() if k.startswith('audio_')]
+    for k in keys_to_remove:
+        del st.session_state[k]
+
 # --- Main App ---
 
 def main():
@@ -179,7 +269,7 @@ def main():
             print("DEBUG: Test Audio Button Clicked")
             try:
                 test_text = "Testing audio system. One, two, three."
-                test_file = text_to_speech(test_text)
+                test_file = text_to_speech_gtts(test_text)
                 if test_file:
                     with open(test_file, "rb") as f:
                         test_bytes = f.read()
@@ -199,9 +289,12 @@ def main():
         st.session_state['previous_lang'] = lang_choice
     
     if st.session_state['previous_lang'] != lang_choice:
-        st.session_state['current_query'] = ''
+        st.session_state['query_input'] = ''
         st.session_state['previous_lang'] = lang_choice
     
+    # Ensure audio files exist (auto-generates on first run)
+    ensure_audio_files()
+
     # Initialize resources
     client, collection = initialize_vector_store()
     model = get_embedding_model()
@@ -235,36 +328,27 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
     
     if col1.button(current_questions[0]):
-        st.session_state['current_query'] = current_questions[0]
+        st.session_state['query_input'] = current_questions[0]
     if col2.button(current_questions[1]):
-        st.session_state['current_query'] = current_questions[1]
+        st.session_state['query_input'] = current_questions[1]
     if col3.button(current_questions[2]):
-        st.session_state['current_query'] = current_questions[2]
+        st.session_state['query_input'] = current_questions[2]
     if col4.button(current_questions[3]):
-        st.session_state['current_query'] = current_questions[3]
+        st.session_state['query_input'] = current_questions[3]
 
     # Input Area
     input_label = "Or type your question here:" if lang_choice == 'English' else "ಅಥವಾ ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ:"
     
-    # Get query from session state or text input
-    default_query = st.session_state.get('current_query', '')
-    
     col_input, col_clear = st.columns([4, 1])
     with col_input:
-        user_query = st.text_input(input_label, value=default_query, label_visibility="visible")
+        user_query = st.text_input(input_label, key='query_input', label_visibility="visible")
     with col_clear:
         st.write("")  # Spacing
-        if st.button("Clear / ತೆರವುಗೊಳಿಸಿ", key="clear_query_btn"):
-            st.session_state['current_query'] = ''
-            # Clear all audio state
-            keys_to_remove = [k for k in st.session_state.keys() if k.startswith('audio_')]
-            for k in keys_to_remove:
-                del st.session_state[k]
-            st.rerun()
-    
-    # Update session state if user types
-    if user_query:
-        st.session_state['current_query'] = user_query
+        st.button(
+            "Clear / ತೆರವುಗೊಳಿಸಿ",
+            key="clear_query_btn",
+            on_click=clear_query_callback,
+        )
 
     if user_query:
         # Search

@@ -1,0 +1,4 @@
+[logger]
+# Suppress Streamlit's own module-path inspection tracebacks (e.g. torchvision warnings
+# from transformers sub-modules that the file watcher introspects but are unused by this app).
+level = "error"
