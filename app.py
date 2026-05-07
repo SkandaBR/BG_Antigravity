@@ -363,6 +363,8 @@ def main():
                         )
 
                     # Metrics Display
+                    # Answer Relevance: Measures semantic similarity between query and verse using Cosine Similarity (0 to 1).
+                    # Context Precision: Ratio of retrieved verses that exceed the relevance threshold (0.3).
                     c1, c2 = st.columns(2)
                     c1.metric("Answer Relevance", f"{sim_score:.4f}")
                     c2.metric("Context Precision", f"{context_precision:.2f}")
