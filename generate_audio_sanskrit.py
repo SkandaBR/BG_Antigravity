@@ -32,6 +32,7 @@ def generate_audio_for_verse(text, output_path, lang='sa'):
         return False
 
 def main():
+    """Main function to orchestrate the generation of Sanskrit audio files."""
     print("=" * 60)
     print("Pre-generating Audio Files for Original Sanskrit Verses")
     print("=" * 60)

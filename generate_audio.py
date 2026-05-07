@@ -30,6 +30,7 @@ def generate_audio_for_verse(text, output_path, lang='en'):
         return False
 
 def main():
+    """Main function to orchestrate the generation of English and Kannada audio files."""
     print("=" * 60)
     print("Pre-generating Audio Files for Bhagavad Gita Chapter 2")
     print("=" * 60)
